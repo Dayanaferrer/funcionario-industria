@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -26,32 +27,50 @@ public class Principal {
         funcionarios.add(new Funcionario("Heloísa", LocalDate.of(2003, 5, 24), new BigDecimal("1606.85"), "Eletricista"));
         funcionarios.add(new Funcionario("Helena", LocalDate.of(1996, 9, 2), new BigDecimal("2799.93"), "Gerente"));
 
+
         while (true) {
             System.out.println("\nMenu:");
-            System.out.println("1 - Imprimir funcionários antes da exclusão");
-            System.out.println("2 - Imprimir funcionários após a exclusão");
-            System.out.println("3 - Sair");
+            System.out.println("1 - Imprimir funcionários");
+            System.out.println("2 - Excluir funcionário 'João'");
+            System.out.println("3 - Aplicar aumento de 10% nos salários");
+            System.out.println("4 - Imprimir funcionários, agrupados por função");
+            System.out.println("0 - Sair");
             System.out.print("Escolha uma opção: ");
             int opcao = scanner.nextInt();
 
             switch (opcao) {
                 case 1:
-                    System.out.println("Antes da exclusão:");
                     imprimirFuncionarios(funcionarios);
                     break;
                 case 2:
-                    List<Funcionario> funcionariosAposExclusao = funcionarios.stream()
+                    funcionarios = funcionarios.stream()
                             .filter(funcionario -> !funcionario.getNome().equals("João"))
                             .collect(Collectors.toList());
-                    System.out.println("\nApós a exclusão:");
-                    imprimirFuncionarios(funcionariosAposExclusao);
+                    System.out.println("Funcionário 'João' excluído com sucesso.");
                     break;
                 case 3:
+                    aplicarAumentoSalario(funcionarios);
+                    System.out.println("Aumento de salário aplicado com sucesso.");
+                    break;
+                case 4:
+                    imprimirFuncionariosAgrupadosPorFuncao(funcionarios);
+                    break;
+                case 0:
                     System.out.println("Saindo...");
-                    return;
+                    scanner.close();
+                    System.exit(0);
+                    break;
                 default:
                     System.out.println("Opção inválida. Tente novamente.");
             }
+        }
+    }
+
+    private static void aplicarAumentoSalario(List<Funcionario> funcionarios) {
+        for (Funcionario funcionario : funcionarios) {
+            BigDecimal aumento = funcionario.getSalario().multiply(new BigDecimal("0.10"));
+            BigDecimal novoSalario = funcionario.getSalario().add(aumento);
+            funcionario.setSalario(novoSalario);
         }
     }
 
@@ -67,5 +86,26 @@ public class Principal {
                     salarioFormatado,
                     funcionario.getFuncao());
         }
+    }
+
+    private static void imprimirFuncionariosAgrupadosPorFuncao(List<Funcionario> funcionarios) {
+        Map<String, List<Funcionario>> funcionariosPorFuncao = funcionarios.stream()
+                .collect(Collectors.groupingBy(Funcionario::getFuncao));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        NumberFormat numberFormatter = NumberFormat.getInstance(new Locale("pt", "BR"));
+
+        funcionariosPorFuncao.forEach((funcao, listaFuncionarios) -> {
+            System.out.println("\nFunção: " + funcao);
+            System.out.printf("%-10s %-15s %-15s %-15s\n", "Nome", "Data Nascimento", "Salário", "Função");
+            listaFuncionarios.forEach(funcionario -> {
+                String salarioFormatado = numberFormatter.format(funcionario.getSalario());
+                System.out.printf("%-10s %-15s %-15s %-15s\n",
+                        funcionario.getNome(),
+                        funcionario.getDataNascimento().format(formatter),
+                        salarioFormatado,
+                        funcionario.getFuncao());
+            });
+        });
     }
 }
