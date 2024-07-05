@@ -3,8 +3,10 @@ package industria;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,6 +36,9 @@ public class Principal {
             System.out.println("2 - Excluir funcionário 'João'");
             System.out.println("3 - Aplicar aumento de 10% nos salários");
             System.out.println("4 - Imprimir funcionários, agrupados por função");
+            System.out.println("5 - Imprimir funcionários que fazem aniversário em Outubro ou Dezembro");
+            System.out.println("6 - Imprimir o funcionário mais velho");
+            System.out.println("7 - Imprimir funcionários por ordem alfabética");
             System.out.println("0 - Sair");
             System.out.print("Escolha uma opção: ");
             int opcao = scanner.nextInt();
@@ -54,6 +59,15 @@ public class Principal {
                     break;
                 case 4:
                     imprimirFuncionariosAgrupadosPorFuncao(funcionarios);
+                    break;
+                case 5:
+                    imprimirMesAniversario(funcionarios);
+                    break;
+                case 6: 
+                    imprimirFuncionarioMaisVelho(funcionarios);
+                    break;
+                case 7:
+                    imprimirFuncionariosOrdemAlfabetica(funcionarios);
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -87,7 +101,8 @@ public class Principal {
                     funcionario.getFuncao());
         }
     }
-
+    
+    
     private static void imprimirFuncionariosAgrupadosPorFuncao(List<Funcionario> funcionarios) {
         Map<String, List<Funcionario>> funcionariosPorFuncao = funcionarios.stream()
                 .collect(Collectors.groupingBy(Funcionario::getFuncao));
@@ -107,5 +122,51 @@ public class Principal {
                         funcionario.getFuncao());
             });
         });
+    }
+    
+    private static void imprimirMesAniversario(List<Funcionario> funcionarios) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        NumberFormat numberFormatter = NumberFormat.getInstance(new Locale("pt", "BR"));
+        System.out.println("\nFuncionários que fazem aniversário em Outubro ou Dezembro:");
+        System.out.printf("%-10s %-15s %-15s %-15s\n", "Nome", "Data Nascimento", "Salário", "Função");
+        funcionarios.stream()
+            .filter(funcionario -> funcionario.getDataNascimento().getMonthValue() == 10 || funcionario.getDataNascimento().getMonthValue() == 12)
+            .forEach(funcionario -> {
+                String salarioFormatado = numberFormatter.format(funcionario.getSalario());
+                System.out.printf("%-10s %-15s %-15s %-15s\n",
+                        funcionario.getNome(),
+                        funcionario.getDataNascimento().format(formatter),
+                        salarioFormatado,
+                        funcionario.getFuncao());
+            });
+    }
+    private static void imprimirFuncionarioMaisVelho(List<Funcionario> funcionarios) {
+        LocalDate dataAtual = LocalDate.now();
+        Funcionario funcionarioMaisVelho = funcionarios.stream()
+                .max(Comparator.comparing(funcionario -> Period.between(funcionario.getDataNascimento(), dataAtual).getYears()))
+                .orElse(null);
+
+        if (funcionarioMaisVelho != null) {
+            int idade = Period.between(funcionarioMaisVelho.getDataNascimento(), dataAtual).getYears();
+            System.out.printf("\nFuncionário mais velho: %s, Idade: %d anos\n", funcionarioMaisVelho.getNome(), idade);
+        } else {
+            System.out.println("Não foi possível encontrar o funcionário mais velho.");
+        }
+    }
+    private static void imprimirFuncionariosOrdemAlfabetica(List<Funcionario> funcionarios) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        NumberFormat numberFormatter = NumberFormat.getInstance(new Locale("pt", "BR"));
+        System.out.println("\nFuncionários por ordem alfabética:");
+        System.out.printf("%-10s %-15s %-15s %-15s\n", "Nome", "Data Nascimento", "Salário", "Função");
+        funcionarios.stream()
+            .sorted(Comparator.comparing(Funcionario::getNome))
+            .forEach(funcionario -> {
+                String salarioFormatado = numberFormatter.format(funcionario.getSalario());
+                System.out.printf("%-10s %-15s %-15s %-15s\n",
+                        funcionario.getNome(),
+                        funcionario.getDataNascimento().format(formatter),
+                        salarioFormatado,
+                        funcionario.getFuncao());
+            });
     }
 }
